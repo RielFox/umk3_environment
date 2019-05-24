@@ -11,9 +11,9 @@ def p1_start_game(frame_ratio):
         {"wait": int(60/frame_ratio), "actions": [Actions.P1_START]}]
 
 
-def p1_select_difficulty(frame_ratio,difficulty):
-    if difficulty == 'Novice':
-        steps = [{"wait": int(600/frame_ratio), "actions": [Actions.P1_HPUNCH]}]
+def p1_select_path(frame_ratio,path):
+    if path == 'Novice':
+        steps = [{"wait": int(300/frame_ratio), "actions": [Actions.P1_HPUNCH]}]
 
     return steps
 
@@ -41,5 +41,9 @@ def p1_select_character(frame_ratio,character):
     steps += [{"wait": int(20 / frame_ratio), "actions": [Actions.P1_HPUNCH]}]
 
     return steps
+
+
+def wait_for_game_over_screens(frame_ratio):
+    return [{"wait": int(10*30), "actions": []}]
 
 
