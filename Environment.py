@@ -66,7 +66,7 @@ def add_rewards(old_data, new_data):
 # The Ultimate Mortal Kombat 3 interface for training an agent against the game
 class Environment(object):
 
-    def __init__(self, env_id, roms_path, frame_ratio=10, frames_per_step=4, render=True, throttle=True, debug=True):
+    def __init__(self, env_id, roms_path, player='P1', frame_ratio=10, frames_per_step=4, render=True, throttle=True, debug=True):
 
         self.frame_ratio = frame_ratio
         self.frames_per_step = frames_per_step
@@ -76,11 +76,18 @@ class Environment(object):
         self.started = False
         self.expected_health = {"P1": 0, "P2": 0}
         self.expected_wins = {"P1": 0, "P2": 0}
+        self.expected_wins_check_done = {"P1": 0, "P2": 0}
         self.expected_time_remaining = 0
         self.round_done = False
         self.stage_done = False
         self.game_over = False
         self.game_completed = False
+
+        self.player = player
+        self.p1_total_rewards_this_round = 0
+        self.p2_total_rewards_this_round = 0
+        self.total_rewards_this_game = 0
+
         self.stage = 1
         self.path = 'Novice'
         self.character = 'Scorpion'
@@ -160,6 +167,12 @@ class Environment(object):
         self.run_steps(wait_for_game_over_screens(self.frame_ratio))
         self.new_game()
 
+    def new_game_after_completion(self):
+        if self.debug:
+            print(">Debug: Waiting for game completed screens...\n")
+        self.run_steps(wait_for_game_completed_screens(self.frame_ratio))
+        self.new_game()
+
     # Steps the emulator along by the requested amount of frames required for the agent to provide actions
     def step(self, move_action, attack_action):
         if self.started:
@@ -186,13 +199,83 @@ class Environment(object):
         else:
             raise EnvironmentError("Start must be called before stepping")
 
+
+     # Collects the specified amount of frames the agent requires before choosing an action
+    def gather_frames(self, actions):
+        data = self.sub_step(actions)
+        frames = [data["frame"]]
+        for i in range(self.frames_per_step - 1):
+            data = add_rewards(data, self.sub_step(actions))
+            frames.append(data["frame"])
+        data["frame"] = frames[0] if self.frames_per_step == 1 else frames
+        return data
+
+
+
+    # Steps the emulator along by one time step and feeds in any actions that require pressing
+    # Takes the data returned from the step and updates book keeping variables while returning rewards
+    def sub_step(self, actions):
+        data = self.emu.step([action.value for action in actions])
+
+        p1_diff_reward = (self.expected_health["P1"] - data["healthP1"])
+        p2_diff_reward = (self.expected_health["P2"] - data["healthP2"])
+        self.expected_health = {"P1": data["healthP1"], "P2": data["healthP2"]}
+
+        if data["current_round_winsP1"] == self.expected_wins["P1"] + 1:
+            p1_round_win_reward = 100
+            p2_round_win_reward = -100
+        elif data["current_round_winsP2"] == self.expected_wins["P2"] + 1:
+            p2_round_win_reward = 100
+            p1_round_win_reward = -100
+        else:
+            p1_round_win_reward = 0
+            p2_round_win_reward = 0
+
+        self.expected_wins["P1"] = data["current_round_winsP1"]
+        self.expected_wins["P2"] = data["current_round_winsP2"]
+
+        self.time_remaining = (int(data["time_remaining_tens_digit"]) * 10) + int(data["time_remaining_ones_digit"])
+
+        print("tr: " + str(self.time_remaining) + " etr: " + str(self.expected_time_remaining))
+
+        if self.time_remaining == self.expected_time_remaining - 1:
+
+            if data["healthP1"] < data["healthP2"]:
+                p1_time_remaining_reward = -1
+                p2_time_remaining_reward = 1
+
+            elif data["healthP1"] > data["healthP2"]:
+                p1_time_remaining_reward = 1
+                p2_time_remaining_reward = -1
+            else:
+                p1_time_remaining_reward = 0
+                p2_time_remaining_reward = 0
+        else:
+            p1_time_remaining_reward = 0
+            p2_time_remaining_reward = 0
+
+        self.expected_time_remaining = self.time_remaining
+
+        #Return the total rewards of each player for this timestep in a rewards dictionary
+        rewards = {
+            "P1": (p2_diff_reward - p1_diff_reward) + p1_time_remaining_reward + p1_round_win_reward,
+            "P2": (p1_diff_reward - p2_diff_reward) + p2_time_remaining_reward + p2_round_win_reward
+        }
+
+        if self.debug:
+            print(">Debug: Rewards for P1 this timestep: " + str(rewards["P1"]) + "\n")
+            print(">Debug: Rewards for P2 this timestep: " + str(rewards["P2"]) + "\n")
+
+        data["rewards"] = rewards
+        return data
+
     # Checks whether the round or game has finished
     def p1_check_done(self, data):
 
         self.time_remaining = (int(data["time_remaining_tens_digit"]) * 10) + int(data["time_remaining_ones_digit"])
 
-        if data["current_round_winsP1"] == self.expected_wins["P1"] + 1:
-            self.expected_wins["P1"] = data["current_round_winsP1"]
+        if data["current_round_winsP1"] == self.expected_wins_check_done["P1"] + 1:
+            self.expected_wins_check_done["P1"] = data["current_round_winsP1"]
 
             if data["current_round_winsP1"] == 2:
                 self.stage_done = True
@@ -206,8 +289,8 @@ class Environment(object):
                 if self.debug:
                     print(">Debug: Round won. Advancing to next round. \n")
 
-        elif data["current_round_winsP2"] == self.expected_wins["P2"] + 1:
-            self.expected_wins["P2"] = data["current_round_winsP2"]
+        elif data["current_round_winsP2"] == self.expected_wins_check_done["P2"] + 1:
+            self.expected_wins_check_done["P2"] = data["current_round_winsP2"]
 
             if data["current_round_winsP2"] == 2:
                 self.game_over = True
@@ -224,39 +307,6 @@ class Environment(object):
                 print(">Debug: Draw! Advancing to next round. \n")
             self.round_done = True
 
-        return data
-
-     # Collects the specified amount of frames the agent requires before choosing an action
-    def gather_frames(self, actions):
-        data = self.sub_step(actions)
-        frames = [data["frame"]]
-        for i in range(self.frames_per_step - 1):
-            data = add_rewards(data, self.sub_step(actions))
-            frames.append(data["frame"])
-        data["frame"] = frames[0] if self.frames_per_step == 1 else frames
-        return data
-
-
-
-    # Steps the emulator along by one time step and feeds in any actions that require pressing
-    # Takes the data returned from the step and updates book keeping variables
-    def sub_step(self, actions):
-        data = self.emu.step([action.value for action in actions])
-
-        p1_diff = (self.expected_health["P1"] - data["healthP1"])
-        p2_diff = (self.expected_health["P2"] - data["healthP2"])
-        self.expected_health = {"P1": data["healthP1"], "P2": data["healthP2"]}
-
-        rewards = {
-            "P1": (p2_diff - p1_diff),
-            "P2": (p1_diff - p2_diff)
-        }
-
-        if self.debug:
-            print(">Debug: Rewards for P1 this timestep: " + str(rewards["P1"]) + "\n")
-            print(">Debug: Rewards for P2 this timestep: " + str(rewards["P2"]) + "\n")
-
-        data["rewards"] = rewards
         return data
 
     # Safely closes emulator

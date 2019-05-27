@@ -47,3 +47,7 @@ def wait_for_game_over_screens(frame_ratio):
     return [{"wait": int(10*30), "actions": []}]
 
 
+def wait_for_game_completed_screens(frame_ratio):
+    return [{"wait": int(10*30), "actions": []}]
+
+
