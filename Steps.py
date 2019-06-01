@@ -11,14 +11,29 @@ def p1_start_game(frame_ratio):
         {"wait": int(60/frame_ratio), "actions": [Actions.P1_START]}]
 
 
-def p1_select_path(frame_ratio,path):
+#Select path at 'Choose your destiny' screen
+def p1_select_path(frame_ratio, path):
     if path == 'Novice':
         steps = [{"wait": int(300/frame_ratio), "actions": [Actions.P1_HPUNCH]}]
+    elif path == 'Warrior':
+        steps = [{"wait": int(100 / frame_ratio), "actions": [Actions.P1_RIGHT]},
+                 {"wait": int(300 / frame_ratio), "actions": [Actions.P1_HPUNCH]}]
+    elif path == 'Master':
+        steps = [{"wait": int(100 / frame_ratio), "actions": [Actions.P1_RIGHT]},
+                 {"wait": int(100 / frame_ratio), "actions": [Actions.P1_RIGHT]},
+                 {"wait": int(300 / frame_ratio), "actions": [Actions.P1_HPUNCH]}]
+    elif path == 'MasterII':
+        steps = [{"wait": int(100 / frame_ratio), "actions": [Actions.P1_RIGHT]},
+                 {"wait": int(100 / frame_ratio), "actions": [Actions.P1_RIGHT]},
+                 {"wait": int(100 / frame_ratio), "actions": [Actions.P1_RIGHT]},
+                 {"wait": int(300 / frame_ratio), "actions": [Actions.P1_HPUNCH]}]
+    else:
+        raise EnvironmentError("Invalid path setting. Available paths: 'Novice', 'Warrior', 'Master','MasterII'. \n ")
 
     return steps
 
-
-def p1_select_character(frame_ratio,character):
+#Select character in Character Select screen
+def p1_select_character(frame_ratio, character):
 
     if character == 'Scorpion':
         right = 6
@@ -44,10 +59,70 @@ def p1_select_character(frame_ratio,character):
 
 
 def wait_for_game_over_screens(frame_ratio):
-    return [{"wait": int(10*30), "actions": []}]
+    return [{"wait": int(3000 / frame_ratio), "actions": []}]
 
 
 def wait_for_game_completed_screens(frame_ratio):
-    return [{"wait": int(10*30), "actions": []}]
+    return [{"wait": int(1500 / frame_ratio), "actions": []}]
+
+def set_difficulty(frame_ratio, new_difficulty, previous_difficulty):
+
+    #If the new difficulty is the same as the previous difficulty, no difficulty changes need to be made
+    if new_difficulty == previous_difficulty:
+        steps = []
+    else:
+        #Enter Test Menu -> Game Adjustments -> Computer Difficulty
+        steps = [{"wait": 0, "actions": [Actions.SERVICE]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_LPUNCH]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                 {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]}]
+
+        # Default difficulty is Medium (2) [0-Very Easy,1-Easy,2-Medium,3-Hard,4-Very Hard]
+
+        #If the new difficulty is higher than previous difficulty,
+        # press UP the appropriate number of times to increase the difficulty
+        if new_difficulty > previous_difficulty:
+
+            steps += [{"wait": int(20 / frame_ratio), "actions": [Actions.P1_LPUNCH]}]
+
+            for i in range(previous_difficulty,new_difficulty):
+                steps += [{"wait": int(20 / frame_ratio), "actions": [Actions.P1_UP]}]
+
+            steps += [{"wait": int(20 / frame_ratio), "actions": [Actions.P1_LPUNCH]}]
+        # If the new difficulty is lower than previous difficulty,
+        # press DOWN the appropriate number of times to decrease the difficulty
+        elif new_difficulty < previous_difficulty:
+
+            steps += [{"wait": int(20 / frame_ratio), "actions": [Actions.P1_LPUNCH]}]
+
+            for i in range(new_difficulty, previous_difficulty):
+                steps += [{"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]}]
+
+            steps += [{"wait": int(20 / frame_ratio), "actions": [Actions.P1_LPUNCH]}]
+
+        #Exit the Test Menu
+        steps += [{"wait": int(1000 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                  {"wait": int(20 / frame_ratio), "actions": [Actions.P1_LPUNCH]},
+                  {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                  {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                  {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                  {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                  {"wait": int(20 / frame_ratio), "actions": [Actions.P1_DOWN]},
+                  {"wait": int(20 / frame_ratio), "actions": [Actions.P1_LPUNCH]}]
+
+    return new_difficulty, steps
+
+
+
+
+
+
+
 
 

@@ -25,6 +25,8 @@ while True:
 
     if game_over:
         env.new_game_after_loss()
+    elif game_completed:
+        env.new_game_after_completion()
     elif stage_done:
         env.next_stage()
     elif round_done:

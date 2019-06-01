@@ -66,7 +66,7 @@ def add_rewards(old_data, new_data):
 # The Ultimate Mortal Kombat 3 interface for training an agent against the game
 class Environment(object):
 
-    def __init__(self, env_id, roms_path, player='P1', frame_ratio=10, frames_per_step=4, render=True, throttle=True, debug=True):
+    def __init__(self, env_id, roms_path, player='P1', frame_ratio=5, frames_per_step=4, render=True, throttle=False, debug=True):
 
         self.frame_ratio = frame_ratio
         self.frames_per_step = frames_per_step
@@ -78,19 +78,25 @@ class Environment(object):
         self.expected_wins = {"P1": 0, "P2": 0}
         self.expected_wins_check_done = {"P1": 0, "P2": 0}
         self.expected_time_remaining = 0
+        self.time_remaining = 0
         self.round_done = False
         self.stage_done = False
         self.game_over = False
         self.game_completed = False
 
         self.player = player
-        self.p1_total_rewards_this_round = 0
-        self.p2_total_rewards_this_round = 0
+        self.total_rewards_this_round = {"P1": 0, "P2": 0}
         self.total_rewards_this_game = 0
 
         self.stage = 1
         self.path = 'Novice'
+        self.difficulty = 0
+        self.expected_difficulty = 0 #Assumes UMK3 starts with Very Easy pre-selected
         self.character = 'Scorpion'
+
+        self.paths = ['Novice', 'Warrior', 'Master', 'MasterII']
+        self.difficulties = ['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard']
+
         self.debug = True
 
     # Runs a set of action steps over a series of time steps
@@ -102,23 +108,35 @@ class Environment(object):
             self.emu.step([action.value for action in step["actions"]])
 
     def new_game(self):
+
+        self.expected_difficulty, difficulty_steps = set_difficulty(self.frame_ratio, self.difficulty, self.expected_difficulty)
+        self.run_steps(difficulty_steps)
+
         if self.debug:
-            print(">Debug: Starting a new game.\n")
+            print(">Debug: Starting a new game... Difficulty: " + self.difficulties[self.difficulty] +
+                  ", Path: " + self.path + " \n")
+
         self.run_steps(p1_start_game(self.frame_ratio))
         self.run_steps(p1_select_character(self.frame_ratio, self.character))
         self.run_steps(p1_select_path(self.frame_ratio, self.path))
         self.wait_for_fight_start()
         self.expected_health = {"P1": 0, "P2": 0}
         self.expected_wins = {"P1": 0, "P2": 0}
+        self.expected_wins_check_done = {"P1": 0, "P2": 0}
         self.round_done = False
         self.stage_done = False
         self.game_over = False
         self.game_completed = False
         self.started = True
+        self.expected_time_remaining = 0
+        self.time_remaining = 0
+        self.total_rewards_this_round = {"P1": 0, "P2": 0}
+        self.total_rewards_this_game = 0
+        self.stage = 1
+
 
     # Must be called first after creating this class
     # Sends actions to the game until the learnable gameplay starts
-    # Returns the first few frames of gameplay
     def start(self):
          if self.throttle:
              for i in range(int(250 / self.frame_ratio)):
@@ -160,6 +178,7 @@ class Environment(object):
         self.time_remaining = (int(data["time_remaining_tens_digit"]) * 10) + int(data["time_remaining_ones_digit"])
         while int(data["healthP1"]) != 166 and int(data["healthP2"]) != 166 and self.time_remaining != 99:
             data = self.emu.step([])
+            self.time_remaining = (int(data["time_remaining_tens_digit"]) * 10) + int(data["time_remaining_ones_digit"])
 
     def new_game_after_loss(self):
         if self.debug:
@@ -236,8 +255,6 @@ class Environment(object):
 
         self.time_remaining = (int(data["time_remaining_tens_digit"]) * 10) + int(data["time_remaining_ones_digit"])
 
-        print("tr: " + str(self.time_remaining) + " etr: " + str(self.expected_time_remaining))
-
         if self.time_remaining == self.expected_time_remaining - 1:
 
             if data["healthP1"] < data["healthP2"]:
@@ -262,6 +279,9 @@ class Environment(object):
             "P2": (p1_diff_reward - p2_diff_reward) + p2_time_remaining_reward + p2_round_win_reward
         }
 
+        self.total_rewards_this_round['P1'] += rewards['P1']
+        self.total_rewards_this_round['P2'] += rewards['P2']
+
         if self.debug:
             print(">Debug: Rewards for P1 this timestep: " + str(rewards["P1"]) + "\n")
             print(">Debug: Rewards for P2 this timestep: " + str(rewards["P2"]) + "\n")
@@ -272,36 +292,68 @@ class Environment(object):
     # Checks whether the round or game has finished
     def p1_check_done(self, data):
 
+        #Get the time currently remaining from the two memory locations holding each of the two digits (from 99 to 00)
         self.time_remaining = (int(data["time_remaining_tens_digit"]) * 10) + int(data["time_remaining_ones_digit"])
 
+        #If a round has ended
+        if data["current_round_winsP1"] == self.expected_wins_check_done["P1"] + 1\
+            or data["current_round_winsP2"] == self.expected_wins_check_done["P2"] + 1\
+                or (data["healthP1"] == 0 and data["healthP2"] == 0) or self.time_remaining == 0:
+                    if self.debug:
+                        print(">Debug: Total rewards for P1 ths round: " + str(self.total_rewards_this_round['P1']) + ' \n')
+                        print(">Debug: Total rewards for P2 ths round: " + str(self.total_rewards_this_round['P2']) + ' \n')
+                    self.total_rewards_this_round = {"P1": 0, "P2": 0}
+
+        #If the round wins of P1 have incremented, P1 has won a round!
         if data["current_round_winsP1"] == self.expected_wins_check_done["P1"] + 1:
             self.expected_wins_check_done["P1"] = data["current_round_winsP1"]
-
+            #If it has reached 2 round wins, P1 has won the stage
             if data["current_round_winsP1"] == 2:
-                self.stage_done = True
-                self.stage += 1
-
-                if self.debug:
-                    print(">Debug: Stage won. Advancing to stage " + str(self.stage) + ". \n")
+                #Check if it reached the final stage of a path
+                if self.path is 'Novice' and self.stage == 8 or\
+                    self.path is 'Warrior' and self.stage == 9 or \
+                        self.path is 'Master' and self.stage == 10 or\
+                            self.path is 'MasterII' and self.stage == 11:
+                                #Set the game completed flag to true
+                                self.game_completed = True
+                                if self.debug:
+                                    print(">Debug: Game completed on  " + str(self.path) + " path and on "
+                                          + str(self.difficulties[self.difficulty]) + " difficulty! \n")
+                                #If the game has been completed, play on a harder path if there is a harder path
+                                if self.path is not 'MasterII':
+                                    path_index = self.paths.index(self.path)
+                                    path_index += 1
+                                    self.path = self.paths[path_index]
+                                #Else, if the Very Hard difficulty hasn't been reached,
+                                # increase the difficulty and reset the path back to 'Novice'
+                                elif self.difficulty != 4:
+                                    self.difficulty += 1
+                                    self.path = 'Novice'
+                #Else advance to the next stage
+                else:
+                    self.stage_done = True
+                    self.stage += 1
+                    if self.debug:
+                        print(">Debug: Stage won. Advancing to stage " + str(self.stage) + ". \n")
+            #If P1 hasn't reached the round win limit, proceed to the next round
             else:
                 self.round_done = True
-
                 if self.debug:
                     print(">Debug: Round won. Advancing to next round. \n")
-
+        # If the round wins of P2 have incremented, P2 has won a round!
         elif data["current_round_winsP2"] == self.expected_wins_check_done["P2"] + 1:
             self.expected_wins_check_done["P2"] = data["current_round_winsP2"]
-
+            #If agent is P1 and P2 (CPU) wins 2 rounds, the game is over for the agent
             if data["current_round_winsP2"] == 2:
                 self.game_over = True
-
                 if self.debug:
                     print(">Debug: Stage lost. Quiting game. \n")
             else:
+                # If P2 hasn't reached the round win limit, proceed to the next round
                 self.round_done = True
-
                 if self.debug:
                     print(">Debug: Round lost. Advancing to next round. \n")
+        # If no round wins have incremented but both players' health has reached 0 or the time has reached 00, it is a draw!
         elif (data["healthP1"] == 0 and data["healthP2"] == 0) or self.time_remaining == 0:
             if self.debug:
                 print(">Debug: Draw! Advancing to next round. \n")
