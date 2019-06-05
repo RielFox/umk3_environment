@@ -94,6 +94,8 @@ class Environment(object):
         self.expected_difficulty = 0 #Assumes UMK3 starts with Very Easy pre-selected
         self.character = 'Scorpion'
 
+        self.total_episodes_played = 0
+
         self.paths = ['Novice', 'Warrior', 'Master', 'MasterII']
         self.difficulties = ['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard']
 
@@ -302,6 +304,7 @@ class Environment(object):
                     if self.debug:
                         print(">Debug: Total rewards for P1 ths round: " + str(self.total_rewards_this_round['P1']) + ' \n')
                         print(">Debug: Total rewards for P2 ths round: " + str(self.total_rewards_this_round['P2']) + ' \n')
+                    self.total_episodes_played += 1
                     self.total_rewards_this_round = {"P1": 0, "P2": 0}
 
         #If the round wins of P1 have incremented, P1 has won a round!
@@ -326,7 +329,7 @@ class Environment(object):
                                     self.path = self.paths[path_index]
                                 #Else, if the Very Hard difficulty hasn't been reached,
                                 # increase the difficulty and reset the path back to 'Novice'
-                                elif self.difficulty != 4:
+                                elif self.difficulty < 4:
                                     self.difficulty += 1
                                     self.path = 'Novice'
                 #Else advance to the next stage
