@@ -66,8 +66,9 @@ def add_rewards(old_data, new_data):
 # The Ultimate Mortal Kombat 3 interface for training an agent against the game
 class Environment(object):
 
-    def __init__(self, env_id, roms_path, player='P1', frame_ratio=5, frames_per_step=4, render=True, throttle=False, debug=True):
+    def __init__(self, env_id, roms_path, player='P1', frame_ratio=8, frames_per_step=1, render=True, throttle=False, debug=True):
 
+        self.env_id = env_id
         self.frame_ratio = frame_ratio
         self.frames_per_step = frames_per_step
         self.throttle = throttle
@@ -79,6 +80,7 @@ class Environment(object):
         self.expected_wins_check_done = {"P1": 0, "P2": 0}
         self.expected_time_remaining = 0
         self.time_remaining = 0
+        self.done = False
         self.round_done = False
         self.stage_done = False
         self.game_over = False
@@ -125,6 +127,7 @@ class Environment(object):
         self.expected_health = {"P1": 0, "P2": 0}
         self.expected_wins = {"P1": 0, "P2": 0}
         self.expected_wins_check_done = {"P1": 0, "P2": 0}
+        self.done = False
         self.round_done = False
         self.stage_done = False
         self.game_over = False
@@ -135,6 +138,8 @@ class Environment(object):
         self.total_rewards_this_round = {"P1": 0, "P2": 0}
         self.total_rewards_this_game = 0
         self.stage = 1
+
+
 
 
     # Must be called first after creating this class
@@ -155,6 +160,7 @@ class Environment(object):
     def next_stage(self):
         self.expected_health = {"P1": 0, "P2": 0}
         self.expected_wins = {"P1": 0, "P2": 0}
+        self.done = False
         self.round_done = False
         self.stage_done = False
         return self.wait_for_next_stage_start()
@@ -169,6 +175,7 @@ class Environment(object):
             data = self.emu.step([])
 
     def next_round(self):
+        self.done = False
         self.round_done = False
         self.expected_health = {"P1": 0, "P2": 0}
         return self.wait_for_next_round_start()
@@ -203,7 +210,7 @@ class Environment(object):
                 actions += p1_index_to_attack_action(attack_action)
                 data = self.gather_frames(actions)
                 data = self.p1_check_done(data)
-
+                '''
                 if self.debug:
                     print(">Debug: healthP1:" + str(data["healthP1"]) + " healthP2:" + str(data["healthP2"]) + " \n")
                     print(">Debug: turboP1: " + str(data["turboP1"]) + " turboP2: " + str(data["turboP2"]) + " \n")
@@ -213,8 +220,8 @@ class Environment(object):
                     print(">Debug: winsP1: " + str(data["current_round_winsP1"]) + " winsP2: " + str(
                         data["current_round_winsP2"]) + " \n")
                     print(">Debug: fighting:" + str(data["fighting"]) + " \n")
-
-                return data["frame"], data["rewards"], self.round_done, self.stage_done, self.game_over, self.game_completed
+                '''
+                return data["frame"], data["rewards"], self.done, self.round_done, self.stage_done, self.game_over, self.game_completed
             else:
                 raise EnvironmentError("Attempted to step while characters are not fighting")
         else:
@@ -283,11 +290,11 @@ class Environment(object):
 
         self.total_rewards_this_round['P1'] += rewards['P1']
         self.total_rewards_this_round['P2'] += rewards['P2']
-
+        '''
         if self.debug:
             print(">Debug: Rewards for P1 this timestep: " + str(rewards["P1"]) + "\n")
             print(">Debug: Rewards for P2 this timestep: " + str(rewards["P2"]) + "\n")
-
+        '''
         data["rewards"] = rewards
         return data
 
@@ -300,12 +307,16 @@ class Environment(object):
         #If a round has ended
         if data["current_round_winsP1"] == self.expected_wins_check_done["P1"] + 1\
             or data["current_round_winsP2"] == self.expected_wins_check_done["P2"] + 1\
-                or (data["healthP1"] == 0 and data["healthP2"] == 0) or self.time_remaining == 0:
-                    if self.debug:
-                        print(">Debug: Total rewards for P1 ths round: " + str(self.total_rewards_this_round['P1']) + ' \n')
-                        print(">Debug: Total rewards for P2 ths round: " + str(self.total_rewards_this_round['P2']) + ' \n')
-                    self.total_episodes_played += 1
-                    self.total_rewards_this_round = {"P1": 0, "P2": 0}
+                or (data["healthP1"] == 0 and data["healthP2"] == 0)\
+                    or (data["healthP1"] == data["healthP2"] and self.time_remaining == 0):
+                    #(data["healthP1"] == 0 and data["healthP2"] == 0) or self.time_remaining == 0
+                    #self.time_remaining == 0 check may trigger a bug
+                        if self.debug:
+                            print(">Debug: Total rewards for P1 ths round: " + str(self.total_rewards_this_round['P1']) + ' \n')
+                            print(">Debug: Total rewards for P2 ths round: " + str(self.total_rewards_this_round['P2']) + ' \n')
+                        self.done = True
+                        self.total_episodes_played += 1
+                        self.total_rewards_this_round = {"P1": 0, "P2": 0}
 
         #If the round wins of P1 have incremented, P1 has won a round!
         if data["current_round_winsP1"] == self.expected_wins_check_done["P1"] + 1:
@@ -319,6 +330,7 @@ class Environment(object):
                             self.path is 'MasterII' and self.stage == 11:
                                 #Set the game completed flag to true
                                 self.game_completed = True
+                                self.log_milestone()
                                 if self.debug:
                                     print(">Debug: Game completed on  " + str(self.path) + " path and on "
                                           + str(self.difficulties[self.difficulty]) + " difficulty! \n")
@@ -356,13 +368,39 @@ class Environment(object):
                 self.round_done = True
                 if self.debug:
                     print(">Debug: Round lost. Advancing to next round. \n")
-        # If no round wins have incremented but both players' health has reached 0 or the time has reached 00, it is a draw!
-        elif (data["healthP1"] == 0 and data["healthP2"] == 0) or self.time_remaining == 0:
-            if self.debug:
-                print(">Debug: Draw! Advancing to next round. \n")
-            self.round_done = True
+        # If no round wins have incremented but both players' health has reached 0
+        # or the time has reached 00 and both players have equal health, it's a draw!
+        elif (data["healthP1"] == 0 and data["healthP2"] == 0)\
+                or (data["healthP1"] == data["healthP2"] and self.time_remaining == 0):
+                #(data["healthP1"] == 0 and data["healthP2"] == 0) or self.time_remaining == 0
+                    if self.debug:
+                        print(">Debug: Draw! Advancing to next round. \n")
+                    self.round_done = True
 
         return data
+
+    def reset(self):
+        if self.game_over:
+            self.new_game_after_loss()
+        elif self.game_completed:
+            self.new_game_after_completion()
+        elif self.stage_done:
+            self.next_stage()
+        elif self.round_done:
+            self.next_round()
+        else:
+            raise EnvironmentError("Reset called while gameplay still running")
+
+    def log_milestone(self):
+        # Create a text file called the [name of the environment] + "_milestones" if it does not exist
+        # Open the text file with write permission
+        f = open(self.env_id + "_milestones.txt", "a+")
+        # Write the milestone
+        f.write(self.env_id + " has managed to complete the " + str(self.path) + " path on the "
+                + str(self.difficulties[self.difficulty]) + " difficulty after " + str(self.total_episodes_played)
+                + " total episodes.\r\n")
+        # Close the milestones file
+        f.close()
 
     # Safely closes emulator
     def close(self):
