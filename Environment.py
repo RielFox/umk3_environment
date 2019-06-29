@@ -66,7 +66,7 @@ def add_rewards(old_data, new_data):
 # The Ultimate Mortal Kombat 3 interface for training an agent against the game
 class Environment(object):
 
-    def __init__(self, env_id, roms_path, player='P1', frame_ratio=8, frames_per_step=1, render=True, throttle=False, debug=True):
+    def __init__(self, env_id, roms_path, player='P1', frame_ratio=4, frames_per_step=1, render=True, throttle=False, debug=True):
 
         self.env_id = env_id
         self.frame_ratio = frame_ratio
