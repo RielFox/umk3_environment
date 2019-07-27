@@ -66,7 +66,7 @@ def add_rewards(old_data, new_data):
 # The Ultimate Mortal Kombat 3 interface for training an agent against the game
 class Environment(object):
 
-    def __init__(self, env_id, roms_path, player='P1', frame_ratio=4, frames_per_step=1, render=True, throttle=False, debug=True):
+    def __init__(self, env_id, roms_path, player='P1', frame_ratio=2, frames_per_step=1, render=True, throttle=False, debug=True):
 
         self.env_id = env_id
         self.frame_ratio = frame_ratio
@@ -139,9 +139,6 @@ class Environment(object):
         self.total_rewards_this_game = 0
         self.stage = 1
 
-
-
-
     # Must be called first after creating this class
     # Sends actions to the game until the learnable gameplay starts
     def start(self):
@@ -150,7 +147,6 @@ class Environment(object):
                  self.emu.step([])
 
          self.new_game()
-
 
     def wait_for_fight_start(self):
         data = self.emu.step([])
@@ -227,7 +223,6 @@ class Environment(object):
         else:
             raise EnvironmentError("Start must be called before stepping")
 
-
      # Collects the specified amount of frames the agent requires before choosing an action
     def gather_frames(self, actions):
         data = self.sub_step(actions)
@@ -237,8 +232,6 @@ class Environment(object):
             frames.append(data["frame"])
         data["frame"] = frames[0] if self.frames_per_step == 1 else frames
         return data
-
-
 
     # Steps the emulator along by one time step and feeds in any actions that require pressing
     # Takes the data returned from the step and updates book keeping variables while returning rewards
@@ -302,7 +295,7 @@ class Environment(object):
     def p1_check_done(self, data):
 
         #Get the time currently remaining from the two memory locations holding each of the two digits (from 99 to 00)
-        self.time_remaining = (int(data["time_remaining_tens_digit"]) * 10) + int(data["time_remaining_ones_digit"])
+        self.time_remaining = int(data["time_remaining_tens_digit"]) * 10 + int(data["time_remaining_ones_digit"])
 
         #If a round has ended
         if data["current_round_winsP1"] == self.expected_wins_check_done["P1"] + 1\
@@ -320,6 +313,10 @@ class Environment(object):
 
         #If the round wins of P1 have incremented, P1 has won a round!
         if data["current_round_winsP1"] == self.expected_wins_check_done["P1"] + 1:
+            if self.debug:
+                print(">Debug: Game End Condition Met -> P1 wins have incremented in game's memory.")
+                print("P1 Health:" + str(data["healthP1"]) + " P2 Health:" + str(
+                    data["healthP2"]) + " Current Time:" + str(self.time_remaining))
             self.expected_wins_check_done["P1"] = data["current_round_winsP1"]
             #If it has reached 2 round wins, P1 has won the stage
             if data["current_round_winsP1"] == 2:
@@ -357,6 +354,10 @@ class Environment(object):
                     print(">Debug: Round won. Advancing to next round. \n")
         # If the round wins of P2 have incremented, P2 has won a round!
         elif data["current_round_winsP2"] == self.expected_wins_check_done["P2"] + 1:
+            if self.debug:
+                print(">Debug: Game End Condition Met -> P2 wins have incremented in game's memory.")
+                print("P1 Health:" + str(data["healthP1"]) + " P2 Health:" + str(
+                    data["healthP2"]) + " Current Time:" + str(self.time_remaining))
             self.expected_wins_check_done["P2"] = data["current_round_winsP2"]
             #If agent is P1 and P2 (CPU) wins 2 rounds, the game is over for the agent
             if data["current_round_winsP2"] == 2:
@@ -370,12 +371,21 @@ class Environment(object):
                     print(">Debug: Round lost. Advancing to next round. \n")
         # If no round wins have incremented but both players' health has reached 0
         # or the time has reached 00 and both players have equal health, it's a draw!
-        elif (data["healthP1"] == 0 and data["healthP2"] == 0)\
-                or (data["healthP1"] == data["healthP2"] and self.time_remaining == 0):
-                #(data["healthP1"] == 0 and data["healthP2"] == 0) or self.time_remaining == 0
-                    if self.debug:
-                        print(">Debug: Draw! Advancing to next round. \n")
-                    self.round_done = True
+        elif (data["healthP1"] == 0 and data["healthP2"] == 0):
+            if self.debug:
+                print(">Debug: Game End Condition Met -> Both P1 and P2 health values have reached 0 (Draw).")
+                print("P1 Health:" + str(data["healthP1"]) + " P2 Health:" + str(
+                    data["healthP2"])) + " Current Time:" + str(self.time_remaining)
+                print(">Debug: Draw! Advancing to next round. \n")
+            self.round_done = True
+        elif (data["healthP1"] == data["healthP2"] and self.time_remaining == 0):
+            if self.debug:
+                print(
+                    ">Debug: Game End Condition Met -> Time has ran out with P1 and P2 health values equal (Draw).")
+                print("P1 Health:" + str(data["healthP1"]) + " P2 Health:" + str(
+                    data["healthP2"]) + " Current Time:" + str(self.time_remaining))
+                print(">Debug: Draw! Advancing to next round. \n")
+            self.round_done = True
 
         return data
 
