@@ -85,21 +85,32 @@ class Environment(object):
         self.stage_done = False
         self.game_over = False
         self.game_completed = False
+        self.num_total_characters = umk3_num_total_characters
 
         self.player = player
         self.total_rewards_this_round = {"P1": 0, "P2": 0}
         self.total_rewards_this_game = 0
 
+        #A list of the names of all UMK3 vanilla selectable characters in order
+        self.umk3_character_list = ['Kitana', 'Reptile', 'SonyaBlade', 'JaxBriggs', 'Nightwolf', 'Jade', 'Scorpion',
+                                    'Kano', 'SubZero', 'Sektor', 'Sindel', 'Stryker', 'Cyrax', 'KungLao', 'Kabal',
+                                    'Sheeva', 'ShangTsung', 'LiuKang', 'Smoke']
+
+        self.character_selection = 6 # 'Scorpion' (default) is 6 #19 and over for random character
+        self.character = 0
+        self.character_name = ''
+
         self.stage = 1
         self.path = 'Novice'
         self.difficulty = 0
         self.expected_difficulty = 0 #Assumes UMK3 starts with Very Easy pre-selected
-        self.character = 'Scorpion'
-
-        self.total_episodes_played = 0
 
         self.paths = ['Novice', 'Warrior', 'Master', 'MasterII']
         self.difficulties = ['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard']
+
+        self.total_episodes_played = 0
+        self.memory_values = []
+        self.one_hot_character_selection = []
 
         self.debug = True
 
@@ -116,12 +127,15 @@ class Environment(object):
         self.expected_difficulty, difficulty_steps = set_difficulty(self.frame_ratio, self.difficulty, self.expected_difficulty)
         self.run_steps(difficulty_steps)
 
+        self.run_steps(p1_start_game(self.frame_ratio))
+        character_select_steps, self.character, self.one_hot_character_selection = p1_select_character(
+            self.frame_ratio, self.character_selection)
+        self.character_name = self.umk3_character_list[self.character]
         if self.debug:
             print(">Debug: Starting a new game... Difficulty: " + self.difficulties[self.difficulty] +
-                  ", Path: " + self.path + " \n")
+                  ", Path: " + self.path + ", Character: " + self.character_name + " \n")
 
-        self.run_steps(p1_start_game(self.frame_ratio))
-        self.run_steps(p1_select_character(self.frame_ratio, self.character))
+        self.run_steps(character_select_steps)
         self.run_steps(p1_select_path(self.frame_ratio, self.path))
         self.wait_for_fight_start()
         self.expected_health = {"P1": 0, "P2": 0}
@@ -237,17 +251,18 @@ class Environment(object):
     # Takes the data returned from the step and updates book keeping variables while returning rewards
     def sub_step(self, actions):
         data = self.emu.step([action.value for action in actions])
+        self.memory_values = data
 
         p1_diff_reward = (self.expected_health["P1"] - data["healthP1"])
         p2_diff_reward = (self.expected_health["P2"] - data["healthP2"])
         self.expected_health = {"P1": data["healthP1"], "P2": data["healthP2"]}
 
         if data["current_round_winsP1"] == self.expected_wins["P1"] + 1:
-            p1_round_win_reward = 100
-            p2_round_win_reward = -100
+            p1_round_win_reward = 200
+            p2_round_win_reward = -200
         elif data["current_round_winsP2"] == self.expected_wins["P2"] + 1:
-            p2_round_win_reward = 100
-            p1_round_win_reward = -100
+            p2_round_win_reward = 200
+            p1_round_win_reward = -200
         else:
             p1_round_win_reward = 0
             p2_round_win_reward = 0
@@ -276,9 +291,11 @@ class Environment(object):
         self.expected_time_remaining = self.time_remaining
 
         #Return the total rewards of each player for this timestep in a rewards dictionary
+        #Rewards range roughly from +360 to -360, thus normalizing by dividing by 360
+        #Also round rewards to 5 decimal places
         rewards = {
-            "P1": (p2_diff_reward - p1_diff_reward) + p1_time_remaining_reward + p1_round_win_reward,
-            "P2": (p1_diff_reward - p2_diff_reward) + p2_time_remaining_reward + p2_round_win_reward
+            "P1": round(((p2_diff_reward - p1_diff_reward) + p1_time_remaining_reward + p1_round_win_reward)/360, 5),
+            "P2": round(((p1_diff_reward - p2_diff_reward) + p2_time_remaining_reward + p2_round_win_reward)/360, 5)
         }
 
         self.total_rewards_this_round['P1'] += rewards['P1']
@@ -408,7 +425,7 @@ class Environment(object):
         # Write the milestone
         f.write(self.env_id + " has managed to complete the " + str(self.path) + " path on the "
                 + str(self.difficulties[self.difficulty]) + " difficulty after " + str(self.total_episodes_played)
-                + " total episodes.\r\n")
+                + " total episodes with " + self.character_name + ".\r\n")
         # Close the milestones file
         f.close()
 

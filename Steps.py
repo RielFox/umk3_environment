@@ -1,8 +1,10 @@
-from MAMEToolkit.umk3_environment.Actions import Actions
-
 # An enumerable class which specifies the set of action steps required to perform different predefined tasks
 # E.g. starting a new game, selecting Mortal Kombat difficulty, selecting character
+from MAMEToolkit.umk3_environment.Actions import Actions
+import numpy as np
+import random
 
+umk3_num_total_characters = 19
 
 def p1_start_game(frame_ratio):
     return [
@@ -34,28 +36,56 @@ def p1_select_path(frame_ratio, path):
 
 #Select character in Character Select screen
 def p1_select_character(frame_ratio, character):
+#character: character number, range:0-18
 
-    if character == 'Scorpion':
-        right = 6
+    right1 = 0
+    down = 0
+    right2 = 0
+    one_hot_character_selection = np.eye(umk3_num_total_characters)[0]
+
+    #If character number above range of selectable characters, choose a random one
+    if character > umk3_num_total_characters - 1:
+        character = random.randint(0, umk3_num_total_characters - 1)
+
+    #'Scorpion', the default character, is number 6
+    if 0 <= character <= 6:
+        right1 = character
         down = 0
-    else:
-        right = 2
-        down = 0
+        right2 = 0
+        one_hot_character_selection = np.eye(umk3_num_total_characters)[character]
+    elif 7 <= character <= 8:
+        right1 = 1
+        down = 1
+        right2 = character - 7
+        one_hot_character_selection = np.eye(umk3_num_total_characters)[character]
+    elif 9 <= character <= 13:
+        right1 = 1
+        down = 2
+        right2 = character - 9
+        one_hot_character_selection = np.eye(umk3_num_total_characters)[character]
+    elif 14 <= character <= 18:
+        right1 = 1
+        down = 3
+        right2 = character - 14
+        one_hot_character_selection = np.eye(umk3_num_total_characters)[character]
 
     #Wait for character selection screen to show
     steps = [{"wait": int(300/frame_ratio), "actions": []}]
 
     #Select character
-    for i in range(0,right):
+    for i in range(0, right1):
         steps += [{"wait": int(20/frame_ratio), "actions": [Actions.P1_RIGHT]}]
 
-    for k in range(0,down):
+    for k in range(0, down):
         steps += [{"wait": int(20/frame_ratio), "actions": [Actions.P1_DOWN]}]
 
-    #Confirm selection
-    steps += [{"wait": int(20 / frame_ratio), "actions": [Actions.P1_HPUNCH]}]
+    for l in range(0, right2):
+        steps += [{"wait": int(20/frame_ratio), "actions": [Actions.P1_RIGHT]}]
 
-    return steps
+    #Confirm selection
+    steps += [{"wait": int(20/frame_ratio), "actions": [Actions.P1_HPUNCH]}]
+
+    return steps, character, one_hot_character_selection
 
 
 def wait_for_game_over_screens(frame_ratio):
@@ -65,8 +95,8 @@ def wait_for_game_over_screens(frame_ratio):
 def wait_for_game_completed_screens(frame_ratio):
     return [{"wait": int(1500 / frame_ratio), "actions": []}]
 
-def set_difficulty(frame_ratio, new_difficulty, previous_difficulty):
 
+def set_difficulty(frame_ratio, new_difficulty, previous_difficulty):
     #If the new difficulty is the same as the previous difficulty, no difficulty changes need to be made
     if new_difficulty == previous_difficulty:
         steps = []
