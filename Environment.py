@@ -68,6 +68,7 @@ class Environment(object):
 
     def __init__(self, env_id, roms_path, player='P1', frame_ratio=2, frames_per_step=1, render=True, throttle=False, debug=True):
 
+        self.character_selection = 6  # 'Scorpion' (default) is 6 #19 and over for random character
         self.env_id = env_id
         self.frame_ratio = frame_ratio
         self.frames_per_step = frames_per_step
@@ -96,11 +97,11 @@ class Environment(object):
                                     'Kano', 'SubZero', 'Sektor', 'Sindel', 'Stryker', 'Cyrax', 'KungLao', 'Kabal',
                                     'Sheeva', 'ShangTsung', 'LiuKang', 'Smoke']
 
-        self.character_selection = 6 # 'Scorpion' (default) is 6 #19 and over for random character
         self.character = 0
         self.character_name = ''
 
         self.stage = 1
+        self.highest_stage = 0
         self.path = 'Novice'
         self.difficulty = 0
         self.expected_difficulty = 0 #Assumes UMK3 starts with Very Easy pre-selected
@@ -337,13 +338,18 @@ class Environment(object):
             self.expected_wins_check_done["P1"] = data["current_round_winsP1"]
             #If it has reached 2 round wins, P1 has won the stage
             if data["current_round_winsP1"] == 2:
-                #Check if it reached the final stage of a path
+                # Log milestone if a new highest stage has been reached
+                if self.stage > self.highest_stage:
+                    self.log_stage_milestone()
+                    self.highest_stage = self.stage
+                # Check if it reached the final stage of a path
                 if self.path is 'Novice' and self.stage == 8 or\
                     self.path is 'Warrior' and self.stage == 9 or \
                         self.path is 'Master' and self.stage == 10 or\
                             self.path is 'MasterII' and self.stage == 11:
                                 #Set the game completed flag to true
                                 self.game_completed = True
+                                # Log a game completion milestone
                                 self.log_milestone()
                                 if self.debug:
                                     print(">Debug: Game completed on  " + str(self.path) + " path and on "
@@ -417,6 +423,16 @@ class Environment(object):
             self.next_round()
         else:
             raise EnvironmentError("Reset called while gameplay still running")
+
+    def log_stage_milestone(self):
+        # Create a text file called the [name of the environment] + "_milestones" if it does not exist
+        # Open the text file with write permission
+        f = open(self.env_id + "_milestones.txt", "a+")
+        # Write the milestone
+        f.write(self.env_id + " has managed to defeat stage " + str(self.stage) + " after " + str(self.total_episodes_played)
+                + " total episodes with " + self.character_name + ".\r\n")
+        # Close the milestones file
+        f.close()
 
     def log_milestone(self):
         # Create a text file called the [name of the environment] + "_milestones" if it does not exist

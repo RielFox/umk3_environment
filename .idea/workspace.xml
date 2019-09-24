@@ -4,7 +4,7 @@
     <list default="true" id="bd152e9f-184c-4667-accf-15d5abf938c8" name="Default Changelist" comment="Added total_episodes_played counter and fixed a check">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/Environment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Steps.py" beforeDir="false" afterPath="$PROJECT_DIR$/Steps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/umk3_random_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/umk3_random_agent.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -40,7 +40,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.umk3_run_testActions">
+  <component name="RunManager" selected="Python.umk3_run_randomAgent">
     <configuration name="umk3_list_actions" type="PythonConfigurationType" factoryName="Python">
       <module name="umk3_environment" />
       <option name="INTERPRETER_OPTIONS" value="" />
