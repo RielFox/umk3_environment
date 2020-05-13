@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bd152e9f-184c-4667-accf-15d5abf938c8" name="Default Changelist" comment="Added total_episodes_played counter and fixed a check">
+      <change afterPath="$PROJECT_DIR$/plots/Random_Agent_Vs.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/random_agent_umk3_milestones.txt" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/umk3_P2_random_agent.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/umk3_Vs_random_agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
