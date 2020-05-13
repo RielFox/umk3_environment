@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 from MAMEToolkit.umk3_environment import Environment
 
 roms_path = "../emulator/mame/roms"  # Replace this with the path to your ROMs
-env = Environment("random_agent_umk3", roms_path)
+env = Environment("random_agent_umk3", roms_path, self_play=False, player='P1')
 env.start()
 
 episodes = 2000
 
 episode = 0
 episode_return = 0
-name = "Random_Agent"
+name = "Random_Agent_P1"
 returns_list = []
 
 #Keeps track of the average return over the last 100 episodes

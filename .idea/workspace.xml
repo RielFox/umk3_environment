@@ -2,11 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bd152e9f-184c-4667-accf-15d5abf938c8" name="Default Changelist" comment="Added total_episodes_played counter and fixed a check">
+      <change afterPath="$PROJECT_DIR$/umk3_P2_random_agent.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/umk3_Vs_random_agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/Environment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/umk3_random_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/umk3_random_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Steps.py" beforeDir="false" afterPath="$PROJECT_DIR$/Steps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/umk3_random_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/umk3_P1_random_agent.py" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -23,24 +25,16 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1OVDjFHW1Jgi0x2BLuNP3hEcWQr" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/umk3_test_actions.py" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/umk3_P2_random_agent.py" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
-  <component name="RunManager" selected="Python.umk3_run_randomAgent">
+  <component name="RunManager" selected="Python.umk3_run_Vs_randomAgent">
     <configuration name="umk3_list_actions" type="PythonConfigurationType" factoryName="Python">
       <module name="umk3_environment" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -62,7 +56,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="umk3_run_randomAgent" type="PythonConfigurationType" factoryName="Python">
+    <configuration name="umk3_run_P1_randomAgent" type="PythonConfigurationType" factoryName="Python">
       <module name="umk3_environment" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -74,7 +68,49 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/umk3_random_agent.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/umk3_P1_random_agent.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="umk3_run_P2_randomAgent" type="PythonConfigurationType" factoryName="Python">
+      <module name="umk3_environment" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../../../../../bin/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/umk3_P2_random_agent.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="umk3_run_Vs_randomAgent" type="PythonConfigurationType" factoryName="Python">
+      <module name="umk3_environment" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../../../../../bin/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/umk3_Vs_random_agent.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -106,7 +142,9 @@
     </configuration>
     <list>
       <item itemvalue="Python.umk3_list_actions" />
-      <item itemvalue="Python.umk3_run_randomAgent" />
+      <item itemvalue="Python.umk3_run_P1_randomAgent" />
+      <item itemvalue="Python.umk3_run_P2_randomAgent" />
+      <item itemvalue="Python.umk3_run_Vs_randomAgent" />
       <item itemvalue="Python.umk3_run_testActions" />
     </list>
   </component>
@@ -143,17 +181,80 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added functionality: Starting new game after game over" />
     <MESSAGE value="Added total_episodes_played counter and fixed a check" />
     <option name="LAST_COMMIT_MESSAGE" value="Added total_episodes_played counter and fixed a check" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1411" y="750" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1584629578782">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state x="1411" y="750" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.3773.2133@67.27.3773.2133" timestamp="1584629578782" />
+    <state x="1636" y="820" width="624" height="544" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1584063329540">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state x="1636" y="820" width="624" height="544" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/67.27.3773.2133@67.27.3773.2133" timestamp="1584063329540" />
+    <state x="1736" y="850" width="424" height="484" key="FileChooserDialogImpl" timestamp="1584629575672">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state x="1736" y="850" width="424" height="484" key="FileChooserDialogImpl/67.27.3773.2133@67.27.3773.2133" timestamp="1584629575672" />
+    <state width="3750" height="717" key="GridCell.Tab.0.bottom" timestamp="1589399134146">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state width="3750" height="717" key="GridCell.Tab.0.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1589399134146" />
+    <state width="3750" height="717" key="GridCell.Tab.0.center" timestamp="1589399134145">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state width="3750" height="717" key="GridCell.Tab.0.center/67.27.3773.2133@67.27.3773.2133" timestamp="1589399134145" />
+    <state width="3750" height="717" key="GridCell.Tab.0.left" timestamp="1589399134145">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state width="3750" height="717" key="GridCell.Tab.0.left/67.27.3773.2133@67.27.3773.2133" timestamp="1589399134145" />
+    <state width="3750" height="717" key="GridCell.Tab.0.right" timestamp="1589399134145">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state width="3750" height="717" key="GridCell.Tab.0.right/67.27.3773.2133@67.27.3773.2133" timestamp="1589399134145" />
+    <state width="2263" height="358" key="GridCell.Tab.1.bottom" timestamp="1585333262573">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state width="2263" height="358" key="GridCell.Tab.1.bottom/67.27.3773.2133@67.27.3773.2133" timestamp="1585333262573" />
+    <state width="2263" height="358" key="GridCell.Tab.1.center" timestamp="1585333262572">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state width="2263" height="358" key="GridCell.Tab.1.center/67.27.3773.2133@67.27.3773.2133" timestamp="1585333262572" />
+    <state width="2263" height="358" key="GridCell.Tab.1.left" timestamp="1585333262572">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state width="2263" height="358" key="GridCell.Tab.1.left/67.27.3773.2133@67.27.3773.2133" timestamp="1585333262572" />
+    <state width="2263" height="358" key="GridCell.Tab.1.right" timestamp="1585333262573">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state width="2263" height="358" key="GridCell.Tab.1.right/67.27.3773.2133@67.27.3773.2133" timestamp="1585333262573" />
+    <state x="162" y="47" key="SettingsEditor" timestamp="1583720470143">
+      <screen x="67" y="27" width="1213" height="773" />
+    </state>
+    <state x="162" y="47" key="SettingsEditor/67.27.1213.773@67.27.1213.773" timestamp="1583720470143" />
+    <state x="1609" y="920" key="com.intellij.ide.util.TipDialog" timestamp="1585315064177">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state x="1609" y="920" key="com.intellij.ide.util.TipDialog/0.0.3840.2160@0.0.3840.2160" timestamp="1583193547236" />
+    <state x="1609" y="920" key="com.intellij.ide.util.TipDialog/67.27.3773.2133@67.27.3773.2133" timestamp="1585315064177" />
+    <state x="783" y="864" width="891" height="562" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1585320941485">
+      <screen x="67" y="27" width="3773" height="2133" />
+    </state>
+    <state x="783" y="864" width="891" height="562" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/67.27.3773.2133@67.27.3773.2133" timestamp="1585320941485" />
+    <state x="0" y="27" width="3005" height="1557" key="dock-window-1" timestamp="1583088459291">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="0" y="0" width="3005" height="1557" key="dock-window-1/0.0.3840.2160@0.0.3840.2160" timestamp="1583085829794" />
+    <state x="0" y="27" width="3005" height="1557" key="dock-window-1/0.27.3840.2133@0.27.3840.2133" timestamp="1583088459291" />
   </component>
 </project>
