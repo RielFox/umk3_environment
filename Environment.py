@@ -3,6 +3,7 @@ from MAMEToolkit.emulator.Address import Address
 from MAMEToolkit.umk3_environment.Steps import *
 from MAMEToolkit.umk3_environment.Actions import Actions
 import numpy as np
+import os
 
 
 # Returns the list of memory addresses required to train on Ultimate Mortal Kombat 3 v2.2 (umk3)
@@ -134,11 +135,16 @@ class Player(object):
 # The Ultimate Mortal Kombat 3 interface for training an agent against the game
 class Environment(object):
 
-    def __init__(self, env_id, roms_path, self_play=True, vs_rounds_before_single_player=2, player='P1', frame_ratio=2,
-                 frames_per_step=1, render=True, throttle=False, debug=True):
+    def __init__(self, env_id, roms_path, self_play=True, vs_rounds_before_single_player=2, player='P1', character = 19, 
+                 frame_ratio=2, frames_per_step=1, render=True, throttle=False, debug=True, new_training=True):
 
-        self.p1_character_selection = 19  # 'Scorpion' (default) is 6 #19 and over for random character
-        self.p2_character_selection = 19
+        self.p1_character_selection = character  # 'Scorpion' (default) is 6 #19 and over for random character
+        self.p2_character_selection = character
+
+        # This will need Xvfb X11 virtual server installed on GNU/Linux system
+        if not render:
+            os.system("Xvfb :1 -screen 0 800x600x16 +extension RANDR &")
+            os.environ["DISPLAY"] = ":1"
 
         self.env_id = env_id
         self.self_play = self_play
@@ -149,9 +155,7 @@ class Environment(object):
         self.emu = Emulator(env_id, roms_path, "umk3", setup_memory_addresses(), frame_ratio=frame_ratio, render=render,
                             throttle=throttle, debug=debug)
         self.started = False
-        #self.expected_health = {"P1": 0, "P2": 0}
-        #self.expected_wins = {"P1": 0, "P2": 0}
-        #self.expected_wins_check_done = {"P1": 0, "P2": 0}
+
         self.expected_time_remaining = 0
         self.time_remaining = 0
         self.done = False
@@ -166,8 +170,6 @@ class Environment(object):
         self.P1 = Player('P1', self.p1_character_selection, self.num_total_characters)
         self.P2 = Player('P2', self.p2_character_selection, self.num_total_characters)
         self.env_player = player  # If environment's agent controls 'P1', 'P2' or both in 2 Player self-play 'Vs'
-        #self.total_rewards_this_round = {"P1": 0, "P2": 0}
-        #self.total_rewards_this_game = 0
 
         # Player is initialized to 'Vs' if self_play is True
         if self.self_play is True:
@@ -176,13 +178,6 @@ class Environment(object):
         # Number of self-play Vs rounds to be played before the agent plays a single player benchmark in story mode
         self.vs_rounds_before_single_player = vs_rounds_before_single_player
         self.current_vs_rounds_before_single_player = vs_rounds_before_single_player
-
-
-        # Initialize character index and name
-        #self.p1_character = 0
-        #self.p1_character_name = ''
-        #self.p2_character = 0
-        #self.p2_character_name = ''
 
         # Stage is counting only if playing in single-player mode
         # If 'Vs' mode, Stage remains at 0
@@ -203,8 +198,14 @@ class Environment(object):
 
         self.total_episodes_played = 0
         self.memory_values = []
-        #self.p1_one_hot_character_selection = []
-        #self.p2_one_hot_character_selection = []
+
+        # Track if any milsetones have been logged to decide if to create a new file or append
+        self.new_training = new_training
+
+        if not self.new_training and os.path.exists(os.path.join('milestones', self.env_id + '_milestones.txt')):
+            self.logged_first_milestone = True
+        else:
+            self.logged_first_milestone = False
 
     # Runs a set of action steps over a series of time steps
     # Used for transitioning the emulator through non-learnable gameplay, aka. title screens, character selects
@@ -589,6 +590,8 @@ class Environment(object):
     def on_single_player_stage_loss(self):
         self.game_over = True
         self.finished_single_player = True
+        if self.self_play:
+            self.env_player = 'Vs'
         if self.debug:
             if self.env_player is 'P1':
                 print(">Debug: Total rewards for " + self.env_player + " this game: " +
@@ -657,7 +660,6 @@ class Environment(object):
         self.new_game()
 
     def vs_after_single_player(self):
-        self.env_player = 'Vs'
         self.current_vs_rounds_before_single_player = self.vs_rounds_before_single_player
         self.new_game_after_loss()
 
@@ -799,9 +801,9 @@ class Environment(object):
             if not self.self_play:
                 self.new_game_after_loss()
             else:
-                if self.env_player is 'Vs':
+                if self.env_player is 'Vs' and not self.finished_single_player:
                     self.vs_continue(self.last_vs_game_winner)
-                elif self.finished_single_player:
+                elif self.env_player is 'Vs' and self.finished_single_player:
                     self.vs_after_single_player()
                 else:
                     self.single_player_after_vs()
@@ -816,9 +818,20 @@ class Environment(object):
 
     def log_stage_milestone(self):
         assert(self.env_player is 'P1' or self.env_player is 'P2')
+        # Create milestones folder if it does not exist
+        if not os.path.exists('milestones'):
+          os.mkdir('milestones')
         # Create a text file called the [name of the environment] + "_milestones" if it does not exist
         # Open the text file with write permission
-        f = open(self.env_id + "_milestones.txt", "a+")
+        if not self.logged_first_milestone:
+            # If this is a new training, create or overwrite existing milestones file
+            f = open(os.path.join('milestones', self.env_id + '_milestones.txt'), 'w+')
+        else:
+            # If this is a continuation from a previous session and a milestone file exists, 
+            # append to the milestones file
+            f = open(os.path.join('milestones', self.env_id + '_milestones.txt'), 'a+')
+            # Create a newline
+            f.write('\n')
         # Write the milestone
         f.write(self.env_id + " has managed to defeat stage " + str(self.stage) + " after " +
                 str(self.total_episodes_played) + " total episodes playing as " + self.env_player + " with " +
@@ -828,9 +841,20 @@ class Environment(object):
 
     def log_milestone(self):
         assert(self.env_player is 'P1' or self.env_player is 'P2')
+        # Create milestones folder if it does not exist
+        if not os.path.exists('milestones'):
+          os.mkdir('milestones')
         # Create a text file called the [name of the environment] + "_milestones" if it does not exist
         # Open the text file with write permission
-        f = open(self.env_id + "_milestones.txt", "a+")
+        if not self.logged_first_milestone:
+            # If this is a new training, create or overwrite existing milestones file
+            f = open(os.path.join('milestones', self.env_id + '_milestones.txt'), 'w+')
+        else:
+            # If this is a continuation from a previous session and a milestone file exists, 
+            # append to the milestones file
+            f = open(os.path.join('milestones', self.env_id + '_milestones.txt'), 'a+')
+            # Create a newline
+            f.write('\n')
         # Write the milestone
         f.write(self.env_id + " has managed to complete the " + str(self.path) + " path on the "
                 + str(self.difficulties[self.difficulty]) + " difficulty after " + str(self.total_episodes_played)
