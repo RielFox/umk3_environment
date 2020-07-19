@@ -570,6 +570,9 @@ class Environment(object):
                 else:
                     print(">Debug: Total rewards for " + self.env_player + " this game: " +
                           str(self.P2.total_rewards_this_game) + "\n")
+            # If the game mode is set to self-play, set the env_player to Vs to start a Vs game next
+            if self.self_play:
+                self.env_player = 'Vs'
             # If the game has been completed, play on a harder path if there is a harder path
             if self.path is not 'MasterII':
                 path_index = self.paths.index(self.path)
@@ -590,8 +593,6 @@ class Environment(object):
     def on_single_player_stage_loss(self):
         self.game_over = True
         self.finished_single_player = True
-        if self.self_play:
-            self.env_player = 'Vs'
         if self.debug:
             if self.env_player is 'P1':
                 print(">Debug: Total rewards for " + self.env_player + " this game: " +
@@ -600,6 +601,9 @@ class Environment(object):
                 print(">Debug: Total rewards for " + self.env_player + " this game: " +
                       str(self.P2.total_rewards_this_game))
             print(">Debug: Stage lost. Quiting game. \n")
+        # If the game mode is set to self-play, set the env_player to Vs to start a Vs game next
+        if self.self_play:
+            self.env_player = 'Vs'
 
     def on_single_player_round_win(self):
         self.round_done = True
